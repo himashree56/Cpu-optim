@@ -18,7 +18,9 @@ stages:
       md5: a557570a92a68a3ff76548fe8a6ad46f
       size: 92851109
   train:
-    cmd: python src/train.py --input data/processed/train.csv --model_dir models
+    cmd: "python src/train.py  --input data/processed/train.csv  --model_dir models
+      --mlflow-tracking-uri https://dagshub.com/himashree56/fluffy-system.mlflow --mlflow-experiment-name
+      cpu-usage-prediction\n"
     deps:
     - path: data/processed/train.csv
       hash: md5
@@ -26,37 +28,67 @@ stages:
       size: 92851109
     - path: params.yaml
       hash: md5
-      md5: bf30121cdaabdf0a683b6ab118cafb2d
-      size: 354
+      md5: bd46832b4a0c997c65d230cdffb3ab75
+      size: 973
     - path: src/train.py
       hash: md5
-      md5: d2b63ef875e9d6127f16c4468f67ad7f
-      size: 7261
+      md5: b9a32d4c35cf7e291f4ec0c7fae539d8
+      size: 9348
     params:
       params.yaml:
         data_prep:
+          test_size: 0.2
+          random_state: 42
           target_col: cpu_usage
         model:
-          random_forest:
-            n_estimators: 100
-            max_depth: 10
-            min_samples_split: 2
+          lightgbm:
+            n_estimators: 200
+            learning_rate: 0.05
+            max_depth: 8
+            num_leaves: 31
+            subsample: 0.8
+            colsample_bytree: 0.8
+            reg_alpha: 0.1
+            reg_lambda: 0.1
+            random_state: 42
+            force_col_wise: true
+          sgd_regressor:
+            loss: squared_error
+            penalty: l2
+            alpha: 0.0001
+            learning_rate: adaptive
+            eta0: 0.01
+            max_iter: 1000
+            tol: 0.001
             random_state: 42
           linear_regression:
             fit_intercept: true
+            copy_X: true
+            n_jobs: -1
+          random_forest:
+            n_estimators: 100
+            max_depth: 10
+            min_samples_split: 5
+            min_samples_leaf: 2
+            random_state: 42
+            n_jobs: -1
         training:
-          chunksize: 20000
+          chunk_size: 1000
           sample_frac: 0.5
           eval_sample_size: 10000
     outs:
+    - path: metrics.json
+      hash: md5
+      md5: a702005c0c254354b7d394efb70cb7ee
+      size: 187
     - path: models/LinearRegression.pkl
       hash: md5
-      md5: d92ee8bf99ee2b1d8a64353ca3be6bb0
+      md5: 011b01e2985b2f665c636f91d72c98da
       size: 1625
     - path: models/RandomForest.pkl
       hash: md5
-      md5: 37bb1761ad50f56ac8b565b45ac94b23
-      size: 9877985
+      md5: ec515f88f0d2c561c115bb9af702b8a7
+      size: 9871361
   evaluate:
     cmd: python src/evaluate.py --model_dir models --input 
       data/processed/train.csv
@@ -67,12 +99,12 @@ stages:
       size: 92851109
     - path: models/LinearRegression.pkl
       hash: md5
-      md5: d92ee8bf99ee2b1d8a64353ca3be6bb0
+      md5: 011b01e2985b2f665c636f91d72c98da
       size: 1625
     - path: models/RandomForest.pkl
       hash: md5
-      md5: 37bb1761ad50f56ac8b565b45ac94b23
-      size: 9877985
+      md5: ec515f88f0d2c561c115bb9af702b8a7
+      size: 9871361
     - path: src/evaluate.py
       hash: md5
       md5: c1aefd3bd3c756d334ebf33116cf6862
@@ -80,5 +112,5 @@ stages:
     outs:
     - path: results/metrics.json
       hash: md5
-      md5: 9590bbbc51f246bc0f87d902a94570a1
+      md5: 03816995a2fa47f1d571cbabc70474b0
       size: 161
