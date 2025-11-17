@@ -1,0 +1,84 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python src/data_prep.py --input Data/data-1756126612050.csv --output 
+      data/processed/train.csv
+    deps:
+    - path: Data/data-1756126612050.csv
+      hash: md5
+      md5: 448de498a9f801b2a2f00c733ae192f5
+      size: 310056916
+    - path: src/data_prep.py
+      hash: md5
+      md5: 63df20cf6517928dba88ff5a524bc2d2
+      size: 2945
+    outs:
+    - path: data/processed/train.csv
+      hash: md5
+      md5: a557570a92a68a3ff76548fe8a6ad46f
+      size: 92851109
+  train:
+    cmd: python src/train.py --input data/processed/train.csv --model_dir models
+    deps:
+    - path: data/processed/train.csv
+      hash: md5
+      md5: a557570a92a68a3ff76548fe8a6ad46f
+      size: 92851109
+    - path: params.yaml
+      hash: md5
+      md5: bf30121cdaabdf0a683b6ab118cafb2d
+      size: 354
+    - path: src/train.py
+      hash: md5
+      md5: d2b63ef875e9d6127f16c4468f67ad7f
+      size: 7261
+    params:
+      params.yaml:
+        data_prep:
+          target_col: cpu_usage
+        model:
+          random_forest:
+            n_estimators: 100
+            max_depth: 10
+            min_samples_split: 2
+            random_state: 42
+          linear_regression:
+            fit_intercept: true
+        training:
+          chunksize: 20000
+          sample_frac: 0.5
+          eval_sample_size: 10000
+    outs:
+    - path: models/LinearRegression.pkl
+      hash: md5
+      md5: d92ee8bf99ee2b1d8a64353ca3be6bb0
+      size: 1625
+    - path: models/RandomForest.pkl
+      hash: md5
+      md5: 37bb1761ad50f56ac8b565b45ac94b23
+      size: 9877985
+  evaluate:
+    cmd: python src/evaluate.py --model_dir models --input 
+      data/processed/train.csv
+    deps:
+    - path: data/processed/train.csv
+      hash: md5
+      md5: a557570a92a68a3ff76548fe8a6ad46f
+      size: 92851109
+    - path: models/LinearRegression.pkl
+      hash: md5
+      md5: d92ee8bf99ee2b1d8a64353ca3be6bb0
+      size: 1625
+    - path: models/RandomForest.pkl
+      hash: md5
+      md5: 37bb1761ad50f56ac8b565b45ac94b23
+      size: 9877985
+    - path: src/evaluate.py
+      hash: md5
+      md5: c1aefd3bd3c756d334ebf33116cf6862
+      size: 3150
+    outs:
+    - path: results/metrics.json
+      hash: md5
+      md5: 9590bbbc51f246bc0f87d902a94570a1
+      size: 161
