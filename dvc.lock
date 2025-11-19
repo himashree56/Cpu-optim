@@ -1,116 +1,70 @@
 schema: '2.0'
 stages:
-  prepare:
-    cmd: python src/data_prep.py --input Data/data-1756126612050.csv --output 
-      data/processed/train.csv
+  preprocess:
+    cmd: python src/preprocess.py --input data/data-1756126612050.csv --output 
+      data/processed/train.csv --test-output data/processed/test.csv
     deps:
-    - path: Data/data-1756126612050.csv
+    - path: data/data-1756126612050.csv
       hash: md5
       md5: 448de498a9f801b2a2f00c733ae192f5
       size: 310056916
-    - path: src/data_prep.py
+    - path: src/preprocess.py
       hash: md5
-      md5: 63df20cf6517928dba88ff5a524bc2d2
-      size: 2945
+      md5: 5c56addd3ec63a2fa8d02a44c1d3748d
+      size: 1843
     outs:
+    - path: data/processed/test.csv
+      hash: md5
+      md5: b16e6daea8be422131179d4bc1d272a9
+      size: 43765152
     - path: data/processed/train.csv
       hash: md5
-      md5: a557570a92a68a3ff76548fe8a6ad46f
-      size: 92851109
+      md5: 98eaa774fb7bd21711cde82eee2b2d17
+      size: 175080942
   train:
-    cmd: "python src/train.py  --input data/processed/train.csv  --model_dir models
-      --mlflow-tracking-uri https://dagshub.com/himashree56/fluffy-system.mlflow --mlflow-experiment-name
-      cpu-usage-prediction\n"
+    cmd: python src/train.py --train data/processed/train.csv --model-out 
+      models/model.joblib --metrics-out metrics/train_metrics.json
     deps:
     - path: data/processed/train.csv
       hash: md5
-      md5: a557570a92a68a3ff76548fe8a6ad46f
-      size: 92851109
-    - path: params.yaml
-      hash: md5
-      md5: bd46832b4a0c997c65d230cdffb3ab75
-      size: 973
+      md5: 98eaa774fb7bd21711cde82eee2b2d17
+      size: 175080942
     - path: src/train.py
       hash: md5
-      md5: b9a32d4c35cf7e291f4ec0c7fae539d8
-      size: 9348
-    params:
-      params.yaml:
-        data_prep:
-          test_size: 0.2
-          random_state: 42
-          target_col: cpu_usage
-        model:
-          lightgbm:
-            n_estimators: 200
-            learning_rate: 0.05
-            max_depth: 8
-            num_leaves: 31
-            subsample: 0.8
-            colsample_bytree: 0.8
-            reg_alpha: 0.1
-            reg_lambda: 0.1
-            random_state: 42
-            force_col_wise: true
-          sgd_regressor:
-            loss: squared_error
-            penalty: l2
-            alpha: 0.0001
-            learning_rate: adaptive
-            eta0: 0.01
-            max_iter: 1000
-            tol: 0.001
-            random_state: 42
-          linear_regression:
-            fit_intercept: true
-            copy_X: true
-            n_jobs: -1
-          random_forest:
-            n_estimators: 100
-            max_depth: 10
-            min_samples_split: 5
-            min_samples_leaf: 2
-            random_state: 42
-            n_jobs: -1
-        training:
-          chunk_size: 1000
-          sample_frac: 0.5
-          eval_sample_size: 10000
+      md5: 47b54704c4ede1cc3172997d0671424e
+      size: 3083
     outs:
-    - path: metrics.json
+    - path: metrics/train_metrics.json
       hash: md5
-      md5: a702005c0c254354b7d394efb70cb7ee
-      size: 187
-    - path: models/LinearRegression.pkl
+      md5: a9afe09811bdb27229b74d0b96e2687d
+      size: 139
+    - path: models/model.joblib
       hash: md5
-      md5: 011b01e2985b2f665c636f91d72c98da
-      size: 1625
-    - path: models/RandomForest.pkl
-      hash: md5
-      md5: ec515f88f0d2c561c115bb9af702b8a7
-      size: 9871361
+      md5: 21f62b2f2b3eff9dc6fcef4779f50d89
+      size: 25249233
   evaluate:
-    cmd: python src/evaluate.py --model_dir models --input 
-      data/processed/train.csv
+    cmd: python src/evaluate.py --test data/processed/test.csv --model 
+      models/model.joblib --metrics-out metrics/eval_metrics.json --plot-out 
+      plots/eval_plot.png
     deps:
-    - path: data/processed/train.csv
+    - path: data/processed/test.csv
       hash: md5
-      md5: a557570a92a68a3ff76548fe8a6ad46f
-      size: 92851109
-    - path: models/LinearRegression.pkl
+      md5: b16e6daea8be422131179d4bc1d272a9
+      size: 43765152
+    - path: models/model.joblib
       hash: md5
-      md5: 011b01e2985b2f665c636f91d72c98da
-      size: 1625
-    - path: models/RandomForest.pkl
-      hash: md5
-      md5: ec515f88f0d2c561c115bb9af702b8a7
-      size: 9871361
+      md5: 21f62b2f2b3eff9dc6fcef4779f50d89
+      size: 25249233
     - path: src/evaluate.py
       hash: md5
-      md5: c1aefd3bd3c756d334ebf33116cf6862
-      size: 3150
+      md5: d15ce41a59dd4b0d76c78b31718675f6
+      size: 3324
     outs:
-    - path: results/metrics.json
+    - path: metrics/eval_metrics.json
       hash: md5
-      md5: 03816995a2fa47f1d571cbabc70474b0
-      size: 161
+      md5: e82a61be02e387952599947f1bf67437
+      size: 160
+    - path: plots/eval_plot.png
+      hash: md5
+      md5: cd769a4e6abbfb254db9236c896518e9
+      size: 63828
